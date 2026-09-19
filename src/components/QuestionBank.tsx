@@ -176,13 +176,34 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
               }}
               className={cn(
                 "px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center",
-                activeTab === 'bank' && mode === 'flashcard'
+                activeTab === 'bank' && mode === 'flashcard' && !filterBookmarkedOnly
                   ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               <Layers size={16} className="mr-1.5 text-indigo-500" />
               Flashcard Mode
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('bank');
+                setFilterBookmarkedOnly(true);
+              }}
+              className={cn(
+                "px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center",
+                activeTab === 'bank' && filterBookmarkedOnly
+                  ? "bg-amber-500 text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              <Star size={16} className={cn("mr-1.5", activeTab === 'bank' && filterBookmarkedOnly ? "fill-white text-white" : "text-amber-500 fill-amber-400")} />
+              <span>Saved for Later</span>
+              <span className={cn(
+                "ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                activeTab === 'bank' && filterBookmarkedOnly ? "bg-amber-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+              )}>
+                {bookmarkedIds.size}
+              </span>
             </button>
             <button
               onClick={() => setActiveTab('summary')}
@@ -230,7 +251,10 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Starred / Bookmarked</span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Saved for Later</span>
+              <Star size={14} className="text-amber-500 fill-amber-400" />
+            </div>
             <div className="text-2xl font-bold text-amber-500 mt-1">
               {bookmarkedIds.size}
             </div>
@@ -239,9 +263,9 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
                 setActiveTab('bank');
                 setFilterBookmarkedOnly(!filterBookmarkedOnly);
               }}
-              className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline mt-0.5 block font-medium"
+              className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline mt-0.5 block font-semibold"
             >
-              {filterBookmarkedOnly ? 'Show all questions' : 'View bookmarked only'}
+              {filterBookmarkedOnly ? '← Show all 100 questions' : 'Open Focused Study List →'}
             </button>
           </div>
         </div>
@@ -301,6 +325,26 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
                   <option value="2">Level 2 (Intermediate)</option>
                   <option value="3">Level 3 (Advanced)</option>
                 </select>
+
+                <button
+                  onClick={() => setFilterBookmarkedOnly(!filterBookmarkedOnly)}
+                  className={cn(
+                    "px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition flex items-center shadow-xs ml-1",
+                    filterBookmarkedOnly
+                      ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-sm"
+                      : "bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-amber-400 hover:text-amber-600"
+                  )}
+                  title="Toggle Saved for Later focused study list"
+                >
+                  <Star size={13} className={cn("mr-1.5", filterBookmarkedOnly ? "fill-white text-white" : "text-amber-500 fill-amber-400")} />
+                  <span>Saved for Later</span>
+                  <span className={cn(
+                    "ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                    filterBookmarkedOnly ? "bg-amber-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  )}>
+                    {bookmarkedIds.size}
+                  </span>
+                </button>
               </div>
 
               {/* Mode & Language switchers */}
@@ -384,6 +428,48 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
             </div>
           </div>
 
+          {/* Focused Study Banner for Saved for Later */}
+          {filterBookmarkedOnly && (
+            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-xs">
+                  <Star size={20} className="fill-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200 flex items-center">
+                    Saved for Later — Focused Study Mode
+                    <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 font-bold">
+                      {filteredQuestions.length} {filteredQuestions.length === 1 ? 'Question' : 'Questions'}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                    Review and master all items you have starred across standard questions and interactive flashcards.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setMode('flashcard')}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center border",
+                    mode === 'flashcard'
+                      ? "bg-amber-600 text-white border-amber-700 shadow-sm"
+                      : "bg-white dark:bg-gray-800 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700 hover:bg-amber-50"
+                  )}
+                >
+                  <Layers size={13} className="mr-1.5" />
+                  Study in Flashcards
+                </button>
+                <button
+                  onClick={() => setFilterBookmarkedOnly(false)}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                >
+                  Show All 100 Questions
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Main Question Display: Flashcard Mode vs Standard List */}
           {mode === 'flashcard' ? (
             <FlashcardDeck
@@ -395,9 +481,15 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
             />
           ) : filteredQuestions.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700 shadow-sm">
-              <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">No questions match your criteria</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Try clearing your search query or adjusting your filters.</p>
+              <Star className="mx-auto h-12 w-12 text-amber-400 mb-3 fill-amber-400/20" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                {filterBookmarkedOnly ? "No questions in your Saved for Later list" : "No questions match your criteria"}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+                {filterBookmarkedOnly
+                  ? "Click the 'Save for Later' button or ⭐ Star on any question or flashcard to add it to your focused study deck."
+                  : "Try clearing your search query or adjusting your filters."}
+              </p>
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -407,7 +499,7 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
                 }}
                 className="mt-4 px-4 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
               >
-                Reset Filters
+                {filterBookmarkedOnly ? "Show All 100 Questions" : "Reset Filters"}
               </button>
             </div>
           ) : (
@@ -457,13 +549,19 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
 
                       <button
                         onClick={() => toggleBookmark(q.id)}
-                        title={isBookmarked ? "Remove bookmark" : "Bookmark question"}
-                        className="text-gray-400 hover:text-amber-500 transition p-1"
+                        title={isBookmarked ? "Remove from 'Saved for Later' list" : "Save for Later"}
+                        className={cn(
+                          "flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition shadow-xs",
+                          isBookmarked
+                            ? "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300"
+                            : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-amber-600 hover:border-amber-200 hover:bg-white dark:hover:bg-gray-700"
+                        )}
                       >
                         <Star
-                          size={18}
-                          className={cn(isBookmarked && "fill-amber-400 text-amber-500")}
+                          size={14}
+                          className={cn(isBookmarked ? "fill-amber-400 text-amber-500" : "text-gray-400")}
                         />
+                        <span>{isBookmarked ? "Saved" : "Save for Later"}</span>
                       </button>
                     </div>
 

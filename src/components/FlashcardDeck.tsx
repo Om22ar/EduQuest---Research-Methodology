@@ -51,7 +51,7 @@ export default function FlashcardDeck({
   const [isShuffled, setIsShuffled] = useState(false);
 
   // Active recall filter (within current filtered questions)
-  const [recallFilter, setRecallFilter] = useState<'all' | 'needsReview' | 'mastered' | 'unreviewed'>('all');
+  const [recallFilter, setRecallFilter] = useState<'all' | 'needsReview' | 'mastered' | 'unreviewed' | 'saved'>('all');
 
   // Mastery tracking (persisted in session / local storage for study continuity)
   const [masteredIds, setMasteredIds] = useState<Set<number>>(() => {
@@ -137,9 +137,10 @@ export default function FlashcardDeck({
       if (recallFilter === 'needsReview') return reviewIds.has(q.id);
       if (recallFilter === 'mastered') return masteredIds.has(q.id);
       if (recallFilter === 'unreviewed') return !masteredIds.has(q.id) && !reviewIds.has(q.id);
+      if (recallFilter === 'saved') return bookmarkedIds.has(q.id);
       return true;
     });
-  }, [deckList, recallFilter, reviewIds, masteredIds]);
+  }, [deckList, recallFilter, reviewIds, masteredIds, bookmarkedIds]);
 
   // Bound currentIndex within activeDeck
   useEffect(() => {
@@ -240,12 +241,17 @@ export default function FlashcardDeck({
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         handleShuffle();
+      } else if (e.key === 'f' || e.key === 'F' || e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        if (currentCard) {
+          onToggleBookmark(currentCard.id);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [viewLayout, handleFlip, handleNext, handlePrev, currentCard]);
+  }, [viewLayout, handleFlip, handleNext, handlePrev, currentCard, onToggleBookmark]);
 
   // Grid view bulk flip
   const handleFlipAllGrid = (flip: boolean) => {
@@ -260,17 +266,22 @@ export default function FlashcardDeck({
   const totalCards = activeDeck.length;
   const masteredCount = deckList.filter(q => masteredIds.has(q.id)).length;
   const reviewCount = deckList.filter(q => reviewIds.has(q.id)).length;
+  const savedCount = deckList.filter(q => bookmarkedIds.has(q.id)).length;
   const progressPercent = deckList.length > 0 ? Math.round((masteredCount / deckList.length) * 100) : 0;
 
   if (activeDeck.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700 shadow-sm">
-        <Layers className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+        <Star className="mx-auto h-12 w-12 text-amber-400 mb-3 fill-amber-400/20" />
         <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-          No cards available in this filter
+          {recallFilter === 'saved'
+            ? "No cards in your Saved for Later list"
+            : "No cards available in this filter"}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {recallFilter !== 'all'
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+          {recallFilter === 'saved'
+            ? "Click the 'Save for Later' button or ⭐ Star on any flashcard or question to add it to your focused study deck."
+            : recallFilter !== 'all'
             ? `There are no cards currently marked as "${recallFilter}".`
             : "No questions match your current search and module filters."}
         </p>
@@ -379,6 +390,19 @@ export default function FlashcardDeck({
               )}
             >
               Unreviewed ({Math.max(0, deckList.length - masteredCount - reviewCount)})
+            </button>
+            <button
+              onClick={() => setRecallFilter('saved')}
+              className={cn(
+                "px-2.5 py-1 rounded-md font-semibold transition flex items-center",
+                recallFilter === 'saved'
+                  ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-300 shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-amber-600"
+              )}
+              title="Show only cards saved for later"
+            >
+              <Star size={12} className={cn("mr-1", recallFilter === 'saved' ? "fill-amber-400 text-amber-500" : "text-amber-500/70")} />
+              Saved ({savedCount})
             </button>
           </div>
 
@@ -517,6 +541,7 @@ export default function FlashcardDeck({
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">←</kbd> / <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">→</kbd>: Prev / Next</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">1</kbd>: Need Review</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">2</kbd>: Mastered</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">F</kbd>: Save for Later</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">S</kbd>: Shuffle</span>
               </div>
               <button
@@ -585,13 +610,19 @@ export default function FlashcardDeck({
                       </button>
                       <button
                         onClick={() => onToggleBookmark(currentCard.id)}
-                        className="p-1.5 text-gray-400 hover:text-amber-500 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                        title={bookmarkedIds.has(currentCard.id) ? "Remove Star" : "Star Question"}
+                        className={cn(
+                          "px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition flex items-center shadow-xs",
+                          bookmarkedIds.has(currentCard.id)
+                            ? "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-amber-600 hover:border-amber-300"
+                        )}
+                        title={bookmarkedIds.has(currentCard.id) ? "Remove from 'Saved for Later' list" : "Save for Later (F)"}
                       >
                         <Star
-                          size={20}
-                          className={cn(bookmarkedIds.has(currentCard.id) && "fill-amber-400 text-amber-500")}
+                          size={14}
+                          className={cn("mr-1.5 transition-colors", bookmarkedIds.has(currentCard.id) ? "fill-amber-400 text-amber-500" : "text-gray-400")}
                         />
+                        <span>{bookmarkedIds.has(currentCard.id) ? "Saved" : "Save for Later"}</span>
                       </button>
                     </div>
                   </div>
@@ -683,6 +714,22 @@ export default function FlashcardDeck({
                     </div>
 
                     <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => onToggleBookmark(currentCard.id)}
+                        className={cn(
+                          "px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition flex items-center shadow-xs",
+                          bookmarkedIds.has(currentCard.id)
+                            ? "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-amber-600 hover:border-amber-300"
+                        )}
+                        title={bookmarkedIds.has(currentCard.id) ? "Remove from 'Saved for Later' list" : "Save for Later (F)"}
+                      >
+                        <Star
+                          size={14}
+                          className={cn("mr-1.5 transition-colors", bookmarkedIds.has(currentCard.id) ? "fill-amber-400 text-amber-500" : "text-gray-400")}
+                        />
+                        <span>{bookmarkedIds.has(currentCard.id) ? "Saved" : "Save for Later"}</span>
+                      </button>
                       <button
                         onClick={handleFlip}
                         className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center shadow-xs"
@@ -874,12 +921,32 @@ export default function FlashcardDeck({
                     >
                       <div>
                         <div className="flex items-center justify-between mb-2.5">
-                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-                            Q{q.originalNumber}
-                          </span>
-                          <span className="text-[11px] text-gray-400">
-                            Level {q.difficulty}
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                              Q{q.originalNumber}
+                            </span>
+                            <span className="text-[11px] text-gray-400">
+                              Level {q.difficulty}
+                            </span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleBookmark(q.id);
+                            }}
+                            className={cn(
+                              "p-1.5 rounded-lg border transition",
+                              bookmarkedIds.has(q.id)
+                                ? "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400"
+                                : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 text-gray-400 hover:text-amber-500 hover:border-amber-200"
+                            )}
+                            title={bookmarkedIds.has(q.id) ? "Remove from 'Saved for Later' list" : "Save for Later"}
+                          >
+                            <Star
+                              size={15}
+                              className={cn(bookmarkedIds.has(q.id) && "fill-amber-400 text-amber-500")}
+                            />
+                          </button>
                         </div>
                         <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-relaxed line-clamp-4 mb-3">
                           {q.prompt}
@@ -912,7 +979,27 @@ export default function FlashcardDeck({
                           <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
                             <CheckCircle2 size={13} className="mr-1" /> Solution
                           </span>
-                          <span className="text-[11px] font-mono text-gray-400">Q{q.originalNumber}</span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[11px] font-mono text-gray-400">Q{q.originalNumber}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleBookmark(q.id);
+                              }}
+                              className={cn(
+                                "p-1 rounded-md border transition",
+                                bookmarkedIds.has(q.id)
+                                  ? "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400"
+                                  : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400 hover:text-amber-500"
+                              )}
+                              title={bookmarkedIds.has(q.id) ? "Remove from 'Saved for Later' list" : "Save for Later"}
+                            >
+                              <Star
+                                size={13}
+                                className={cn(bookmarkedIds.has(q.id) && "fill-amber-400 text-amber-500")}
+                              />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-xs">

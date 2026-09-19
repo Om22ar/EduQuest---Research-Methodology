@@ -13,7 +13,8 @@ import Chatbot from './components/Chatbot.tsx';
 import ReviewView from './components/ReviewView.tsx';
 import StudyPlanner from './components/StudyPlanner.tsx';
 import QuestionBank from './components/QuestionBank.tsx';
-import { Moon, Sun, Calendar, LayoutDashboard, RefreshCw, BookOpen, Layers } from 'lucide-react';
+import StudySummaries from './components/StudySummaries.tsx';
+import { Moon, Sun, Calendar, LayoutDashboard, RefreshCw, BookOpen, Layers, BookMarked } from 'lucide-react';
 
 type Theme = 'light' | 'dark';
 type ThemeContextType = {
@@ -180,6 +181,18 @@ function Layout({ children }: { children: React.ReactNode }) {
                     <Layers size={14} className="mr-1.5 text-indigo-500" />
                     Flashcards
                   </Link>
+                  <Link
+                    to="/summaries"
+                    aria-label="Study Summaries Workspace"
+                    className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold min-h-[36px] transition-colors ${
+                      location.pathname === '/summaries' || location.pathname === '/notes'
+                        ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' 
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <BookMarked size={14} className="mr-1.5 text-amber-500" />
+                    ملخصات المذاكرة
+                  </Link>
                 </div>
               )}
             </div>
@@ -255,6 +268,15 @@ function Layout({ children }: { children: React.ReactNode }) {
             <Layers size={15} className="mr-1" />
             Cards
           </Link>
+          <Link
+            to="/summaries"
+            className={`text-xs font-semibold px-2 py-2 rounded-md flex items-center min-h-[44px] ${
+              location.pathname === '/summaries' || location.pathname === '/notes' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            <BookMarked size={15} className="mr-1 text-amber-500" />
+            ملخصات
+          </Link>
         </div>
       )}
       <main className="pb-16">
@@ -278,6 +300,8 @@ export default function App() {
               <Route path="/questions" element={<ProtectedRoute><QuestionBank /></ProtectedRoute>} />
               <Route path="/bank" element={<ProtectedRoute><QuestionBank /></ProtectedRoute>} />
               <Route path="/flashcards" element={<ProtectedRoute><QuestionBank initialMode="flashcard" /></ProtectedRoute>} />
+              <Route path="/summaries" element={<ProtectedRoute><StudySummaries /></ProtectedRoute>} />
+              <Route path="/notes" element={<ProtectedRoute><StudySummaries /></ProtectedRoute>} />
               <Route path="/lesson/:id" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
               <Route path="/lesson/:id/quiz" element={<ProtectedRoute><QuizView /></ProtectedRoute>} />
               <Route path="/review" element={<ProtectedRoute><ReviewView /></ProtectedRoute>} />

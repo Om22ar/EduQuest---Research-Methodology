@@ -728,6 +728,15 @@ export default function QuestionBank({ initialMode }: QuestionBankProps) {
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1" dir="rtl">
                   مراجعة سريعة ومركزة لأهم القواعد، مستويات المقاييس، النزعة المركزية، الأخطاء الإحصائية، وعلاقات الانحدار والارتباط التي تكررت في أسئلة الامتحان.
                 </p>
+                <div className="mt-3">
+                  <Link
+                    to="/summaries"
+                    className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+                  >
+                    <BookMarked size={14} className="mr-1.5" />
+                    <span>فتح بيئة الملخصات المتقدمة (إضافة/حذف وعرض كمستند أو أجزاء) ➔</span>
+                  </Link>
+                </div>
               </div>
 
               {/* Quick Search */}

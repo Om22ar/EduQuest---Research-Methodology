@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { Lesson } from '../types.ts';
 import { Link } from 'react-router-dom';
-import { BookOpen, CheckCircle, RefreshCw, Trophy, Activity, Flame, Calendar, ArrowRight, Target } from 'lucide-react';
+import { BookOpen, CheckCircle, RefreshCw, Trophy, Activity, Flame, Calendar, ArrowRight, Target, BookMarked } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -173,8 +173,8 @@ export default function Dashboard() {
           <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-right font-medium">{completedCount} of {lessons.length} lessons completed</p>
         </div>
 
-        {/* Quick Action Cards: Planner & Question Bank */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Quick Action Cards: Planner, Question Bank & Study Summaries */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30 border border-indigo-100 dark:border-indigo-900 rounded-xl p-5 shadow-sm flex flex-col justify-between">
             <div className="flex items-start space-x-3.5 mb-4">
               <div className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
@@ -220,6 +220,30 @@ export default function Dashboard() {
               className="inline-flex items-center justify-center px-4 py-2 min-h-[40px] border border-transparent rounded-lg shadow-sm text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors w-full"
             >
               Browse 100 Questions <ArrowRight size={14} className="ml-1.5" />
+            </Link>
+          </div>
+
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border border-amber-100 dark:border-amber-900 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+            <div className="flex items-start space-x-3.5 mb-4">
+              <div className="h-10 w-10 bg-amber-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                <BookMarked size={20} />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Study Summaries</h3>
+                  <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">ملخصات المذاكرة</span>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                  قواعد إحصائية ومستندات دراسية متصلة أو مقسمة لأجزاء بأيقونات، مع إضافة وحذف الملخصات.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/summaries"
+              aria-label="Open Study Summaries Workspace"
+              className="inline-flex items-center justify-center px-4 py-2 min-h-[40px] border border-transparent rounded-lg shadow-sm text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors w-full"
+            >
+              Open Summaries <ArrowRight size={14} className="ml-1.5" />
             </Link>
           </div>
         </div>

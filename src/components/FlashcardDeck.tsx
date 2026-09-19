@@ -152,23 +152,43 @@ export default function FlashcardDeck({
   // Current Card
   const currentCard = activeDeck[currentIndex] || null;
 
-  // Shuffle handler
-  const handleShuffle = () => {
-    const shuffled = [...deckList].sort(() => Math.random() - 0.5);
-    setDeckList(shuffled);
+  // Order status notification
+  const [orderToast, setOrderToast] = useState<string | null>(null);
+
+  // Fisher-Yates true randomization shuffle
+  const handleShuffle = useCallback(() => {
+    setDeckList(prev => {
+      const array = [...prev];
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    });
     setIsShuffled(true);
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowHint(false);
-  };
+    setOrderToast("Cards randomized for active recall!");
+  }, []);
 
-  const handleResetOrder = () => {
-    setDeckList(questions);
+  // Reset to original sequential order (Q1 -> Q100)
+  const handleResetOrder = useCallback(() => {
+    const sorted = [...questions].sort((a, b) => Number(a.originalNumber) - Number(b.originalNumber));
+    setDeckList(sorted);
     setIsShuffled(false);
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowHint(false);
-  };
+    setOrderToast("Restored to original sequential order (Q1–Q100)");
+  }, [questions]);
+
+  // Auto-dismiss order toast after 2.5s
+  useEffect(() => {
+    if (!orderToast) return;
+    const timer = setTimeout(() => setOrderToast(null), 2500);
+    return () => clearTimeout(timer);
+  }, [orderToast]);
 
   // Flip toggle
   const handleFlip = useCallback(() => {
@@ -244,6 +264,9 @@ export default function FlashcardDeck({
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         handleShuffle();
+      } else if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        handleResetOrder();
       } else if (e.key === 'f' || e.key === 'F' || e.key === 'b' || e.key === 'B') {
         e.preventDefault();
         if (currentCard) {
@@ -254,7 +277,7 @@ export default function FlashcardDeck({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [viewLayout, handleFlip, handleNext, handlePrev, currentCard, onToggleBookmark]);
+  }, [viewLayout, handleFlip, handleNext, handlePrev, currentCard, onToggleBookmark, handleShuffle, handleResetOrder]);
 
   // Grid view bulk flip
   const handleFlipAllGrid = (flip: boolean) => {
@@ -409,22 +432,44 @@ export default function FlashcardDeck({
             </button>
           </div>
 
-          {/* Controls: Shuffle, Layout, Language */}
+          {/* Controls: Order (Shuffle & Reset), Layout, Language */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Shuffle Button */}
-            <button
-              onClick={isShuffled ? handleResetOrder : handleShuffle}
-              className={cn(
-                "inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg border transition",
-                isShuffled
-                  ? "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800"
-                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50"
-              )}
-              title={isShuffled ? "Reset to original sequential order" : "Shuffle cards for random active recall"}
-            >
-              <Shuffle size={13} className="mr-1.5" />
-              {isShuffled ? "Shuffled (Order Q1-99)" : "Shuffle Deck"}
-            </button>
+            {/* Question Order Control Group: Shuffle & Reset */}
+            <div className="inline-flex items-center rounded-lg p-0.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xs">
+              <button
+                onClick={handleShuffle}
+                className={cn(
+                  "inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-md transition",
+                  isShuffled
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
+                )}
+                title="Randomize question order to maximize active recall (Shortcut: S)"
+              >
+                <Shuffle size={13} className="mr-1.5" />
+                <span>{isShuffled ? "Reshuffle" : "Shuffle"}</span>
+                {isShuffled && (
+                  <span className="ml-1.5 px-1 py-0.2 rounded text-[9px] font-bold bg-indigo-700/80 text-indigo-100">
+                    Active
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleResetOrder}
+                disabled={!isShuffled}
+                className={cn(
+                  "inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-md transition",
+                  !isShuffled
+                    ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-300 shadow-xs font-bold"
+                    : "text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                )}
+                title="Reset questions back to original sequential order Q1–Q100 (Shortcut: O)"
+              >
+                <RotateCcw size={12} className="mr-1.5" />
+                <span>Original Order</span>
+              </button>
+            </div>
 
             {/* Explanation Language */}
             <div className="inline-flex items-center text-xs bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-0.5">
@@ -498,6 +543,22 @@ export default function FlashcardDeck({
         </div>
       </div>
 
+      {/* Order Status Notification Toast */}
+      {orderToast && (
+        <div className="max-w-4xl mx-auto px-4 py-2 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 rounded-xl text-xs flex items-center justify-between shadow-2xs">
+          <div className="flex items-center space-x-2 font-medium">
+            <Shuffle size={13} className="text-indigo-600 dark:text-indigo-400" />
+            <span>{orderToast}</span>
+          </div>
+          <button
+            onClick={() => setOrderToast(null)}
+            className="text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 font-bold px-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ========================================================================= */}
       {/* 1. FOCUS CAROUSEL DECK VIEW (Primary Active Recall Experience)           */}
       {/* ========================================================================= */}
@@ -513,6 +574,15 @@ export default function FlashcardDeck({
               <span className="font-medium text-indigo-600 dark:text-indigo-400">
                 Q{currentCard.originalNumber}
               </span>
+              {isShuffled ? (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                  <Shuffle size={10} className="mr-1" /> Shuffled Order
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                  Sequential Order
+                </span>
+              )}
               {masteredIds.has(currentCard.id) && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                   Mastered ✓
@@ -546,6 +616,7 @@ export default function FlashcardDeck({
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">2</kbd>: Mastered</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">F</kbd>: Save for Later</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">S</kbd>: Shuffle</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">O</kbd>: Original Order</span>
               </div>
               <button
                 onClick={() => setShowShortcutsHelp(false)}
@@ -881,7 +952,9 @@ export default function FlashcardDeck({
         <div className="space-y-4">
           {/* Grid View Controls */}
           <div className="flex items-center justify-between px-1 text-xs text-gray-500 dark:text-gray-400">
-            <span>Showing {activeDeck.length} flashcards in grid. Click any card to flip.</span>
+            <span>
+              Showing {activeDeck.length} flashcards {isShuffled ? '(shuffled order)' : '(sequential order Q1–Q100)'}. Click any card to flip.
+            </span>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => handleFlipAllGrid(false)}

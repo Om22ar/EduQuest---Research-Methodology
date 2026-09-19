@@ -223,10 +223,13 @@ export default function FlashcardDeck({
         return;
       }
 
-      if (e.code === 'Space' || e.key === 'Enter') {
+      // Flip card with Up / Down arrow keys, Space, or Enter
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.code === 'Space' || e.key === 'Enter') {
         e.preventDefault();
         handleFlip();
-      } else if (e.key === 'ArrowRight' || e.key === 'l' || e.key === 'L') {
+      } 
+      // Switch between questions with Left / Right arrow keys
+      else if (e.key === 'ArrowRight' || e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         handleNext();
       } else if (e.key === 'ArrowLeft' || e.key === 'h' || e.key === 'H') {
@@ -537,8 +540,8 @@ export default function FlashcardDeck({
           {showShortcutsHelp && (
             <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl text-xs text-indigo-900 dark:text-indigo-200 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-3">
-                <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">Space</kbd> / <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">Enter</kbd>: Flip Card</span>
-                <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">←</kbd> / <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">→</kbd>: Prev / Next</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">↑</kbd> / <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">↓</kbd> or <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">Space</kbd>: Flip Card</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">←</kbd> / <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">→</kbd>: Switch Question (Prev / Next)</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">1</kbd>: Need Review</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">2</kbd>: Mastered</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[11px]">F</kbd>: Save for Later</span>
@@ -603,10 +606,11 @@ export default function FlashcardDeck({
                       <button
                         onClick={handleFlip}
                         className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 transition flex items-center shadow-xs"
-                        title="Click to flip card and reveal answer (Space)"
+                        title="Click to flip card and reveal answer (↑ / ↓ or Space)"
                       >
                         <RotateCw size={12} className="mr-1.5 text-indigo-600 dark:text-indigo-400 group-hover:rotate-180 transition-transform duration-500" />
                         <span>Flip Card</span>
+                        <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-white dark:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 rounded font-mono text-[10px] text-indigo-600 dark:text-indigo-300">↑↓</kbd>
                       </button>
                       <button
                         onClick={() => onToggleBookmark(currentCard.id)}
@@ -680,10 +684,11 @@ export default function FlashcardDeck({
                     <button
                       onClick={handleFlip}
                       className="inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 shadow-sm transition"
+                      title="Flip to reveal answer (↑ / ↓ or Space)"
                     >
                       <RotateCw size={13} className="mr-1.5 animate-spin-slow" />
                       <span>Flip to Reveal Solution</span>
-                      <kbd className="ml-2 px-1.5 py-0.5 bg-indigo-700/70 rounded font-mono text-[10px]">Space</kbd>
+                      <kbd className="ml-2 px-1.5 py-0.5 bg-indigo-700/70 rounded font-mono text-[10px]">↑ / ↓</kbd>
                     </button>
                   </div>
                 </div>
@@ -733,10 +738,11 @@ export default function FlashcardDeck({
                       <button
                         onClick={handleFlip}
                         className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center shadow-xs"
+                        title="Flip back to question (↑ / ↓ or Space)"
                       >
                         <RotateCw size={13} className="mr-1.5 text-gray-500" />
                         <span>Flip to Question</span>
-                        <kbd className="ml-2 px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[10px]">Space</kbd>
+                        <kbd className="ml-2 px-1.5 py-0.5 bg-white dark:bg-gray-800 border rounded font-mono text-[10px]">↑ / ↓</kbd>
                       </button>
                     </div>
                   </div>
@@ -825,9 +831,12 @@ export default function FlashcardDeck({
             <button
               onClick={handlePrev}
               disabled={activeDeck.length <= 1}
-              className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 transition flex items-center"
+              className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 transition flex items-center shadow-xs"
+              title="Previous question (← ArrowLeft)"
             >
-              <ChevronLeft size={16} className="mr-1" /> Previous
+              <ChevronLeft size={16} className="mr-1" />
+              <span>Previous</span>
+              <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded font-mono text-[10px] text-gray-600 dark:text-gray-300">←</kbd>
             </button>
 
             {/* Quick Card Stepper / Selector */}
@@ -854,9 +863,12 @@ export default function FlashcardDeck({
             <button
               onClick={handleNext}
               disabled={activeDeck.length <= 1}
-              className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition flex items-center"
+              className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition flex items-center shadow-xs"
+              title="Next question (→ ArrowRight)"
             >
-              Next <ChevronRight size={16} className="ml-1" />
+              <span>Next</span>
+              <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 bg-indigo-700/80 border border-indigo-400/40 rounded font-mono text-[10px] text-indigo-100">→</kbd>
+              <ChevronRight size={16} className="ml-1" />
             </button>
           </div>
         </div>

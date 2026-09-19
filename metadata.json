@@ -1,0 +1,6 @@
+{
+  "name": "EduQuest - Research Methodology",
+  "description": "An interactive e-learning platform featuring microlearning, spaced repetition, active recall, a weekly study planner, an AI Tutor, and a 100-question Research Methodology bank.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
